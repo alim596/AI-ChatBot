@@ -2,40 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles */
 @layer base {
   body {
-    @apply bg-gray-100 text-gray-900 font-sans;
-    margin: 0;
+    /* Updated background to match final code (#0f0f0f) */
+    @apply font-sans m-0;
+    background: #0f0f0f;
+    color: #e2e2e2; /* Slightly lighter gray for text */
   }
-
   code {
-    @apply font-mono text-sm bg-gray-200 p-1 rounded;
+    /* Dark code block background */
+    @apply font-mono text-sm p-1 rounded;
+    background: #2c2c2c;
+    color: #f1f1f1;
   }
 }
 
-/* Custom scrollbar styles */
+/* Custom scrollbar styling */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #1f2937; /* Dark gray background */
-  border-radius: 10px; /* Rounded edges */
+  /* Slightly lighter than body background (#1a1a1a) for track */
+  background: #1a1a1a;
+  border-radius: 10px;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #4b5563; /* Lighter gray for the thumb */
-  border-radius: 10px; /* Rounded edges */
+  /* Medium gray for thumb (#3a3a3a) */
+  background: #3a3a3a;
+  border-radius: 10px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280; /* Slightly lighter gray on hover */
+  /* Slightly lighter on hover (#4a4a4a) */
+  background: #4a4a4a;
 }
 
+/* Slide-in from bottom */
 @keyframes slideIn {
   from {
-    transform: translateY(20px);
+    transform: translateY(10px);
     opacity: 0;
   }
   to {
@@ -43,7 +49,11 @@
     opacity: 1;
   }
 }
+.animate-slide-in {
+  animation: slideIn 0.3s ease-in-out;
+}
 
+/* Fade-in */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -52,11 +62,21 @@
     opacity: 1;
   }
 }
-
-.animate-slide-in {
-  animation: slideIn 0.3s ease-in-out;
-}
-
 .animate-fade-in {
   animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Slide-in from the right for the ThoughtGraph */
+@keyframes slideInHorizontal {
+  from {
+    transform: translateX(10%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.animate-slide-in-horizontal {
+  animation: slideInHorizontal 0.4s ease-in-out;
 }

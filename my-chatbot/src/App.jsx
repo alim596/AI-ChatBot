@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ChatBox from "./components/ChatBox";
 import ThoughtGraph from "./components/ThoughtGraph";
 import { mockdata } from "./data/mockData";
@@ -6,111 +6,161 @@ import { mockdata } from "./data/mockData";
 const App = () => {
   const [messages, setMessages] = useState(mockdata);
   const [currentGraph, setCurrentGraph] = useState(null);
-  const [chatWidth, setChatWidth] = useState(100); // ChatBox width in percentage
+  const [chatWidth, setChatWidth] = useState(100); // 100% by default (no CoT)
+  const [conversationTitle, setConversationTitle] = useState("New Conversation");
 
-  const isResizing = useRef(false); // Track whether resizing is active
-  const lastChatWidth = useRef(chatWidth); // Store last valid chatWidth
-  const dividerRef = useRef(); // Divider reference for positioning
+  const isResizing = useRef(false);
+  const lastChatWidth = useRef(chatWidth);
+  const dividerRef = useRef();
 
-  const handleToggleGraph = (id) => {
-    setCurrentGraph((prev) => (prev === id ? null : id));
-    if (currentGraph === id) setChatWidth(100); // Reset to full width when CoT is closed
-    else setChatWidth(50); // Split into half
+  /**
+   * Generate conversation title from the first user message
+   */
+  useEffect(() => {
+    const firstUserMsg = messages.find((m) => m.sender === "user");
+    if (firstUserMsg) {
+      const truncated =
+        firstUserMsg.text.length > 60
+          ? firstUserMsg.text.slice(0, 60) + "..."
+          : firstUserMsg.text;
+      setConversationTitle(truncated);
+    } else {
+      setConversationTitle("New Conversation");
+    }
+  }, [messages]);
+
+  /**
+   * Toggle the chain-of-thought panel
+   */
+  const handleToggleGraph = (messageId) => {
+    setCurrentGraph((prev) => (prev === messageId ? null : messageId));
+    if (currentGraph === messageId) {
+      // If the same message is clicked again, close the panel
+      setChatWidth(100);
+    } else {
+      // Open CoT at ~half the screen
+      setChatWidth(50);
+    }
   };
 
+  /**
+   * Create a new user message and mock AI response
+   */
   const handleNewMessage = (text) => {
-    const userMessage = {
+    const userMsg = {
       id: messages.length + 1,
       text,
       sender: "user",
-      timestamp: new Intl.DateTimeFormat("en-US", {
+      timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
-      }).format(new Date()),
+      }),
     };
 
-    const aiResponse = {
+    // Mock AI Response (replace with your ChatGPT API call)
+    const aiMsg = {
       id: messages.length + 2,
-      text: "This is a default AI response.",
+      text: "AI Response (replace with real API call)",
       sender: "ai",
-      timestamp: new Intl.DateTimeFormat("en-US", {
+      timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
-      }).format(new Date()),
+      }),
       reasoning: [
-        { id: 1, title: "Default Step 1", details: "Default reasoning details for step 1." },
-        { id: 2, title: "Default Step 2", details: "Default reasoning details for step 2." },
+        { id: 1, title: "Step 1", details: "Reasoning details for step 1." },
+        { id: 2, title: "Step 2", details: "Reasoning details for step 2." },
       ],
     };
 
-    setMessages((prev) => [...prev, userMessage, aiResponse]);
+    setMessages((prev) => [...prev, userMsg, aiMsg]);
+    // Close CoT if open
     setCurrentGraph(null);
     setChatWidth(100);
   };
 
+  /**
+   * Divider resizing logic
+   */
   const handleMouseMove = (e) => {
     if (!isResizing.current) return;
-
-    // Calculate new width based on cursor position
-    const newChatWidth = (e.clientX / window.innerWidth) * 100;
-    if (newChatWidth >= 20 && newChatWidth <= 80) {
-      dividerRef.current.style.left = `${newChatWidth}%`; // Update divider dynamically
-      lastChatWidth.current = newChatWidth; // Save the last valid width
+    const newWidth = (e.clientX / window.innerWidth) * 100;
+    if (newWidth >= 20 && newWidth <= 80) {
+      // Move the divider visually
+      dividerRef.current.style.left = `${newWidth}%`;
+      // Track it so we can finalize on mouseUp
+      lastChatWidth.current = newWidth;
     }
   };
 
   const handleMouseUp = () => {
     if (!isResizing.current) return;
     isResizing.current = false;
-    setChatWidth(lastChatWidth.current); // Finalize width state
+    setChatWidth(lastChatWidth.current);
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
   };
 
   const handleMouseDown = () => {
+    // Only resize if CoT is open
+    if (!currentGraph) return;
     isResizing.current = true;
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
   };
 
   return (
-    <div className="h-screen w-screen flex bg-gray-900 text-gray-100 relative">
-      {/* ChatBox */}
-      <div
-        className="flex-none transition-all duration-500 ease-in-out"
-        style={{ width: `${chatWidth}%` }}
-      >
-        <ChatBox
-          onShowGraph={handleToggleGraph}
-          onNewMessage={handleNewMessage}
-          currentGraph={currentGraph}
-          messages={messages}
-        />
-      </div>
+    // No global scrolling => each panel scrolls independently
+    <div className="h-screen w-screen flex flex-col bg-[#0f0f0f] text-gray-200 overflow-hidden">
 
-      {/* Divider */}
-      {currentGraph && (
-        <div
-          ref={dividerRef}
-          className="absolute top-0 h-full w-2 bg-gray-700 cursor-col-resize z-50"
-          style={{ left: `${chatWidth}%` }}
-          onMouseDown={handleMouseDown}
-        ></div>
-      )}
+      {/* Sticky header */}
+      <header className="bg-[#1a1a1a] p-4 border-b border-gray-700 sticky top-0 z-50">
+        <h1 className="text-xl font-semibold truncate">{conversationTitle}</h1>
+      </header>
 
-      {/* Thought Graph */}
-      {currentGraph && (
+      {/* Main area: Chat on the left + optional CoT on the right */}
+      {/* We use "overflow-hidden" here so only child panels scroll, not the entire page. */}
+      <div className="flex flex-1 relative overflow-hidden">
+
+        {/* Chat section */}
         <div
-          className="flex-none transition-all duration-500 ease-in-out bg-gray-800 overflow-hidden"
-          style={{ width: `${100 - chatWidth}%` }}
+          className="flex-none transition-all duration-500 ease-in-out"
+          style={{ width: `${chatWidth}%` }}
         >
-          <ThoughtGraph
-            reasoning={messages.find((msg) => msg.id === currentGraph).reasoning || []}
+          <ChatBox
+            messages={messages}
+            currentGraph={currentGraph}
+            onShowGraph={handleToggleGraph}
+            onNewMessage={handleNewMessage}
           />
         </div>
-      )}
+
+        {/* Divider (appears only if CoT is open) */}
+        {currentGraph && (
+          <div
+            ref={dividerRef}
+            className="absolute top-0 bottom-0 w-2 bg-[#2b2b2b] cursor-col-resize z-40 hover:bg-[#404040]"
+            style={{ left: `${chatWidth}%` }}
+            onMouseDown={handleMouseDown}
+          />
+        )}
+
+        {/* CoT section */}
+        {currentGraph && (
+          <div
+            // "overflow-y-auto" => its own scroll
+            className="flex-none transition-all duration-500 ease-in-out bg-[#1a1a1a] overflow-y-auto h-full z-30"
+            style={{ width: `${100 - chatWidth}%` }}
+          >
+            <ThoughtGraph
+              reasoning={
+                messages.find((msg) => msg.id === currentGraph)?.reasoning || []
+              }
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
