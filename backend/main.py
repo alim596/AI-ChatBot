@@ -47,18 +47,23 @@ async def chat_endpoint(req: ChatRequest):
     # User input
     user_input = req.message.strip()
 
-    # System prompt (static and NOT stored in the context)
+    # System prompt with explicit and clear instructions
     system_prompt = {
         "role": "system",
         "content": (
-            "You are a helpful AI assistant. Follow these rules in full detail:\n"
-            "1. Avoid including any extra labels, section headers, or separators in your response.\n"
-            "2. Revise and understand the user's request fully.\n"
-            "3. Provide a response that fully satisfies the user's query.\n"
-            "4. Ensure the response is concise, elaborative, and does not omit any necessary details.\n\n"
-            "Additionally, generate a chain-of-thought as an array of JSON objects with:\n"
-            "1. A valid JSON format (starting with '```json' and ending with '```').\n"
-            "2. Logical steps described, including 'title' and 'details' fields for each step."
+            "You are a helpful AI assistant. Always follow these rules:\n"
+            "1. Respond clearly and concisely to the user's query.\n"
+            "2. After the response, provide a Chain-of-Thought (COT) reasoning in JSON format.\n"
+            "3. The JSON array must start with '```json' and end with '```'.\n"
+            "4. Each reasoning step must include a 'title' and 'details' field.\n\n"
+            "Example COT format:\n"
+            "```json\n"
+            "[\n"
+            "  {\"title\": \"Reasoning\", \"details\": \"Reasoning details for step 1\"},\n"
+            "  {\"title\": \"Analyzing2\", \"details\": \"Reasoning details for step 2\"}\n"
+            "]\n"
+            "```\n"
+            "Always ensure the response fully satisfies the user's query and includes the COT."
         ),
     }
 
@@ -73,35 +78,36 @@ async def chat_endpoint(req: ChatRequest):
         response = client.chat.completions.create(
             model="gpt-4",
             messages=messages,
-            temperature=0.7,
+            temperature=0.5,
         )
 
+        # Extract AI response text
         ai_text = response.choices[0].message.content.strip()
 
         # Add the assistant's response to the conversation context
         conversation_context.append({"role": "assistant", "content": ai_text})
 
-        # Extract reasoning (chain-of-thought) from the response
-        try:
-            json_start = ai_text.find("```json")
-            if json_start != -1:
-                cleaned_text = ai_text[:json_start].strip()
-
-                json_end = ai_text.find("```", json_start + len("```json"))
-                raw_reasoning = json.loads(ai_text[json_start + len("```json"):json_end].strip())
-
+        # Parse the reasoning (COT) from the response
+        json_start = ai_text.find("```json")
+        json_end = ai_text.find("```", json_start + len("```json"))
+        if json_start != -1 and json_end != -1:
+            # Separate the main response (cleaned_text) from the JSON reasoning block
+            cleaned_text = ai_text[:json_start].strip()
+            raw_reasoning = ai_text[json_start + len("```json"):json_end].strip()
+            try:
+                reasoning = json.loads(raw_reasoning)
                 reasoning = [
                     {"id": idx + 1, "title": item.get("title", ""), "details": item.get("details", "")}
-                    for idx, item in enumerate(raw_reasoning)
+                    for idx, item in enumerate(reasoning)
                 ]
-            else:
-                cleaned_text = ai_text
-                reasoning = [{"id": 1, "title": "Error", "details": "No reasoning JSON found in AI response."}]
-        except Exception as e:
+            except json.JSONDecodeError:
+                reasoning = [{"id": 1, "title": "Error", "details": "Invalid JSON format in AI response."}]
+        else:
+            # If no JSON reasoning block is found, treat the entire response as the main content
             cleaned_text = ai_text
-            reasoning = [{"id": 1, "title": "Error", "details": f"Failed to parse reasoning JSON: {str(e)}"}]
+            reasoning = [{"id": 1, "title": "Error", "details": "No reasoning JSON found in AI response."}]
 
-        # Return the response and reasoning
+        # Return the AI response and reasoning
         return ChatResponse(text=cleaned_text, reasoning=reasoning)
 
     except Exception as e:
