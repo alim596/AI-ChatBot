@@ -23,7 +23,6 @@ const ThoughtGraph = ({ reasoning }) => {
             className="bg-[#2c2c2c] p-4 rounded-lg shadow cursor-pointer hover:bg-[#3a3a3a] transition"
             onClick={() => toggleNode(id)}
           >
-            {console.log(id)}
             <div className="flex justify-between items-center">
               <h3 className="text-sm font-bold text-gray-200">{title}</h3>
               <span className="text-xs text-gray-300">
