@@ -6,16 +6,15 @@ import { mockdata } from "./data/mockData";
 const App = () => {
   const [messages, setMessages] = useState(mockdata);
   const [currentGraph, setCurrentGraph] = useState(null);
-  const [chatWidth, setChatWidth] = useState(100); // 100% by default (no CoT)
+  const [chatWidth, setChatWidth] = useState(100);
   const [conversationTitle, setConversationTitle] = useState("New Conversation");
+  const [loading, setLoading] = useState(false); // New loading state
 
   const isResizing = useRef(false);
   const lastChatWidth = useRef(chatWidth);
   const dividerRef = useRef();
 
-  /**
-   * Generate conversation title from the first user message
-   */
+
   useEffect(() => {
     const firstUserMsg = messages.find((m) => m.sender === "user");
     if (firstUserMsg) {
@@ -35,18 +34,16 @@ const App = () => {
   const handleToggleGraph = (messageId) => {
     setCurrentGraph((prev) => (prev === messageId ? null : messageId));
     if (currentGraph === messageId) {
-      // If the same message is clicked again, close the panel
       setChatWidth(100);
     } else {
-      // Open CoT at ~half the screen
       setChatWidth(50);
     }
   };
 
   /**
-   * Create a new user message and mock AI response
+   * Handle new user message, call the backend for AI response
    */
-  const handleNewMessage = (text) => {
+  const handleNewMessage = async (text) => {
     const userMsg = {
       id: messages.length + 1,
       text,
@@ -58,24 +55,47 @@ const App = () => {
       }),
     };
 
-    // Mock AI Response (replace with your ChatGPT API call)
-    const aiMsg = {
-      id: messages.length + 2,
-      text: "AI Response (replace with real API call)",
-      sender: "ai",
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-      reasoning: [
-        { id: 1, title: "Step 1", details: "Reasoning details for step 1." },
-        { id: 2, title: "Step 2", details: "Reasoning details for step 2." },
-      ],
-    };
+    setMessages((prev) => [...prev, userMsg]);
+    setLoading(true); // Start loading
 
-    setMessages((prev) => [...prev, userMsg, aiMsg]);
-    // Close CoT if open
+    try {
+      const resp = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+      const data = await resp.json(); // { text, reasoning }
+
+      const aiMsg = {
+        id: userMsg.id + 1,
+        text: data.text,
+        sender: "ai",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }),
+        reasoning: data.reasoning || [],
+      };
+
+      setMessages((prev) => [...prev, aiMsg]);
+    } catch (error) {
+      const errorMsg = {
+        id: userMsg.id + 1,
+        text: `Error connecting to backend: ${error.message}`,
+        sender: "ai",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }),
+        reasoning: [],
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    }  finally {
+      setLoading(false); 
+    }
+
     setCurrentGraph(null);
     setChatWidth(100);
   };
@@ -85,45 +105,45 @@ const App = () => {
    */
   const handleMouseMove = (e) => {
     if (!isResizing.current) return;
+
+    // Calculate the new width as a percentage of the window width
     const newWidth = (e.clientX / window.innerWidth) * 100;
+
+    // Enforce minimum and maximum width limits (20% to 80%)
     if (newWidth >= 20 && newWidth <= 80) {
-      // Move the divider visually
       dividerRef.current.style.left = `${newWidth}%`;
-      // Track it so we can finalize on mouseUp
-      lastChatWidth.current = newWidth;
+      lastChatWidth.current = newWidth; // Store the latest width
     }
   };
 
   const handleMouseUp = () => {
     if (!isResizing.current) return;
-    isResizing.current = false;
-    setChatWidth(lastChatWidth.current);
+
+    isResizing.current = false; // Stop resizing
+    setChatWidth(lastChatWidth.current); // Apply the final width
+
+    // Remove event listeners for mouse move and mouse up
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
   };
 
   const handleMouseDown = () => {
-    // Only resize if CoT is open
     if (!currentGraph) return;
-    isResizing.current = true;
+
+    isResizing.current = true; // Start resizing
+
+    // Add event listeners for mouse move and mouse up
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
   };
 
   return (
-    // No global scrolling => each panel scrolls independently
     <div className="h-screen w-screen flex flex-col bg-[#0f0f0f] text-gray-200 overflow-hidden">
-
-      {/* Sticky header */}
       <header className="bg-[#1a1a1a] p-4 border-b border-gray-700 sticky top-0 z-50">
         <h1 className="text-xl font-semibold truncate">{conversationTitle}</h1>
       </header>
 
-      {/* Main area: Chat on the left + optional CoT on the right */}
-      {/* We use "overflow-hidden" here so only child panels scroll, not the entire page. */}
       <div className="flex flex-1 relative overflow-hidden">
-
-        {/* Chat section */}
         <div
           className="flex-none transition-all duration-500 ease-in-out"
           style={{ width: `${chatWidth}%` }}
@@ -133,10 +153,10 @@ const App = () => {
             currentGraph={currentGraph}
             onShowGraph={handleToggleGraph}
             onNewMessage={handleNewMessage}
+            loading={loading}
           />
         </div>
 
-        {/* Divider (appears only if CoT is open) */}
         {currentGraph && (
           <div
             ref={dividerRef}
@@ -146,10 +166,8 @@ const App = () => {
           />
         )}
 
-        {/* CoT section */}
         {currentGraph && (
           <div
-            // "overflow-y-auto" => its own scroll
             className="flex-none transition-all duration-500 ease-in-out bg-[#1a1a1a] overflow-y-auto h-full z-30"
             style={{ width: `${100 - chatWidth}%` }}
           >

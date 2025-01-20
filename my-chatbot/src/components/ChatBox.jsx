@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { AiOutlineSend, AiOutlineCopy } from "react-icons/ai";
 import { FiToggleRight } from "react-icons/fi";
+import TypingAnimation from "./TypingAnimation";
 
-const ChatBox = ({ messages, currentGraph, onShowGraph, onNewMessage }) => {
+const ChatBox = ({ messages, currentGraph, onShowGraph, onNewMessage, loading }) => {
   const [inputValue, setInputValue] = useState("");
   const textAreaRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -95,8 +96,14 @@ const ChatBox = ({ messages, currentGraph, onShowGraph, onNewMessage }) => {
             </div>
           );
         })}
+        {loading && (
+          <div className="flex w-full justify-start">
+            <div className="relative max-w-[75%] p-4 rounded-2xl shadow bg-[#1f1f1f] text-gray-200">
+              <TypingAnimation /> {/* Show typing animation */}
+            </div>
+          </div>
+        )}
       </div>
-
       {/* Input bar pinned to the bottom inside ChatBox */}
       <div className="bg-[#0f0f0f] border-t border-gray-700 p-4">
         <div className="max-w-3xl mx-auto flex space-x-2">
