@@ -1,70 +1,129 @@
-# Getting Started with Create React App
+# Chat Application with AI-Powered Responses
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is a React-based chat application that integrates with OpenAI's API to provide intelligent responses. The app features a user-friendly interface with a "typing" animation, a thought graph for chain-of-thought explanations, and a resizable layout.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+- **Real-time chat** with AI-generated responses.
+- **Interactive "thought graph"** to visualize the reasoning behind AI responses.
+- **Typing animation** to indicate when the AI is generating a response.
+- **Resizable interface** for chat and graph panels.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Installation and Setup
 
-### `npm test`
+Follow these steps to set up and run the project locally.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
 
-### `npm run build`
+Make sure you have the following installed:
+- **Node.js** (v16 or higher recommended)
+- **npm** or **yarn**
+- **Python** (v3.8 or higher, for the backend)
+- **pip** (Python package manager)
+- An **OpenAI API key** (get one from [OpenAI](https://platform.openai.com/signup/))
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Steps to Run Locally
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-repo/chat-app.git
+   cd chat-app
+   ```
 
-### `npm run eject`
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+3. **Set up your API key**:
+   - Create a `.env` file in the root directory of the project.
+   - Add the following line to the `.env` file, replacing `your-api-key-here` with your actual OpenAI API key:
+     ```plaintext
+     OPENAI_API_KEY=your-api-key-here
+     ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+4. **Run the development server**:
+   ```bash
+   npm start
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+5. **Access the application**:
+   - Open your browser and go to:
+     ```
+     http://localhost:3000
+     ```
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+#### **Backend Setup**
 
-## Learn More
+1. **Navigate to the backend directory**:  
+   If your project includes a `backend/` directory, navigate to it:
+   ```bash
+   cd backend
+   ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+2. **Create and activate a virtual environment**:  
+   Set up a virtual environment for Python dependencies:
+   ```bash
+   python -m venv env
+   source env/bin/activate    # On macOS/Linux
+   env\Scripts\activate       # On Windows
+   ```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+3. **Install Python dependencies**:  
+   Install the required Python packages for FastAPI:
+   ```bash
+   pip install fastapi uvicorn python-dotenv
+   ```
 
-### Code Splitting
+4. **Start the backend server**:  
+   Run the FastAPI server:
+   ```bash
+   uvicorn main:app --reload
+   ```
+   The backend will be running at:
+   ```
+   http://127.0.0.1:8000
+   ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+5. **Test the backend**:  
+   Access the API documentation in your browser at:
+   ```
+   http://127.0.0.1:8000/docs
+   ```
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## API Key Information
 
-### Making a Progressive Web App
+This project uses the OpenAI API for generating AI responses. To protect the API key:
+- The key is securely loaded using environment variables via a `.env` file.
+- The `.env` file is excluded from version control using `.gitignore`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+## Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+```
+src/
+├── components/
+│   ├── ChatBox.jsx         # Chat interface
+│   ├── ThoughtGraph.jsx    # Visualization of AI reasoning
+├── App.jsx                 # Main application logic
+├── index.js                # Entry point
+backend/
+├── main.py                 # FastAPI backend logic
+├──.env                     # Example environment file
+```
 
-### Deployment
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Notes for Reviewers
+- **API Key**: The OpenAI API key is not included in the repository. Please follow the setup instructions to add your own key.
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
