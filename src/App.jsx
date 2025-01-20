@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import ChatBox from "./components/ChatBox";
 import ThoughtGraph from "./components/ThoughtGraph";
 import { mockdata } from "./data/mockData";
+import { BiReset } from "react-icons/bi";
 
 const App = () => {
   const [messages, setMessages] = useState(mockdata);
@@ -137,10 +138,36 @@ const App = () => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  /*
+  * Reset chat context and frontend messages
+  */
+  const handleResetContext = async () => {
+    try {
+      // Call the backend reset endpoint
+      const response = await fetch("http://127.0.0.1:8000/reset", { method: "POST" });
+      if (response.ok) {
+        // Clear the messages state to reset the frontend
+        setMessages([]);
+      } else {
+        console.error("Failed to reset backend context:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error resetting context:", error);
+    }
+  };
+  
   return (
     <div className="h-screen w-screen flex flex-col bg-[#0f0f0f] text-gray-200 overflow-hidden">
-      <header className="bg-[#1a1a1a] p-4 border-b border-gray-700 sticky top-0 z-50">
-        <h1 className="text-xl font-semibold truncate">{conversationTitle}</h1>
+      {/* Header with reset button */}
+      <header className="bg-[#1a1a1a] p-4 border-b border-gray-700 sticky top-0 z-50 flex justify-between items-center">
+        <h1 className="text-xl font-semibold truncate">Chat Application</h1>
+        <button
+          onClick={handleResetContext}
+          className="p-2 bg-black-600 text-white rounded-full hover:bg-gray-600 transition"
+          title="Reset Conversation"
+        >
+          <BiReset size={20} />
+        </button>
       </header>
 
       <div className="flex flex-1 relative overflow-hidden">
