@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import ChatBox from "./components/ChatBox";
 import ThoughtGraph from "./components/ThoughtGraph";
 import { BiReset } from "react-icons/bi";
+const API_BASE_URL = process.env.REACT_APP_BACKEND_API_BASE_URL;
 
 const App = () => {
   const [messages, setMessages] = useState([]);
@@ -57,9 +58,11 @@ const App = () => {
 
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true); // Start loading
+    console.log("API Base URL:", API_BASE_URL);
+    console.log("All Environment Variables:", process.env);
 
     try {
-        const resp = await fetch("http://127.0.0.1:8000/chat", {
+        const resp = await fetch(`${API_BASE_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text }),
@@ -143,7 +146,7 @@ const App = () => {
   const handleResetContext = async () => {
     try {
       // Call the backend reset endpoint
-      const response = await fetch("http://127.0.0.1:8000/reset", { method: "POST" });
+      const response = await fetch(`${API_BASE_URL}/reset`, { method: "POST" });
       if (response.ok) {
         // Clear the messages state to reset the frontend
         setMessages([]);
