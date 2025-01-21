@@ -36,7 +36,7 @@ const App = () => {
     if (currentGraph === messageId) {
       setChatWidth(100);
     } else {
-      setChatWidth(50);
+      setChatWidth(60);
     }
   };
 
