@@ -4,6 +4,17 @@ import { AiOutlineSend, AiOutlineCopy } from "react-icons/ai";
 import { FiToggleRight, FiLoader } from "react-icons/fi"; // Loading spinner icon
 import TypingAnimation from "./TypingAnimation"; // Keeps your typing animation intact
 
+// Mock Observability Data
+const mockObservabilityData = `
+Observability Alert Data:
+- Service: Authentication Service
+  - CPU Usage: 92% (Threshold: 80%)
+  - Memory Usage: 1.9 GB (Threshold: 1.5 GB)
+- Service: Payment Gateway
+  - Error Rate: 12% (Threshold: 5%)
+  - Latency: 1200ms (Threshold: 800ms)
+`;
+
 const ChatBox = ({ messages, currentGraph, onShowGraph, onNewMessage, loading }) => {
   const [inputValue, setInputValue] = useState("");
   const textAreaRef = useRef(null);
@@ -26,14 +37,23 @@ const ChatBox = ({ messages, currentGraph, onShowGraph, onNewMessage, loading })
   };
 
   const handleSend = () => {
-    if (!inputValue.trim() || loading) return;
-    onNewMessage(inputValue);
+    if (!inputValue.trim()) return;
+
+    // Check for the trigger keyword
+    if (inputValue.toLowerCase().includes("check observability")) {
+      // Feed the mock observability data instead of the user's text
+      onNewMessage(mockObservabilityData);
+    } else {
+      // Normal message handling
+      onNewMessage(inputValue);
+    }
+
     setInputValue("");
     if (textAreaRef.current) {
       textAreaRef.current.style.height = "auto";
     }
   };
-
+  
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
   };
