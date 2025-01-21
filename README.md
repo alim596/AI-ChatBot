@@ -1,15 +1,16 @@
 # Chat Application with AI-Powered Responses
 
-This project is a React-based chat application that integrates with OpenAI's API to provide intelligent responses. The app features a user-friendly interface with a "typing" animation, a thought graph for chain-of-thought explanations, and a resizable layout.
+This project is a React-based chat application that integrates with OpenAI's API to provide intelligent responses. The app features a user-friendly interface with a "typing" animation, a thought graph for chain-of-thought explanations, and a resizable layout. Additionally, it includes mock observability data analysis triggered by specific user commands.
 
 ---
 
 ## Features
 
-- **Real-time chat** with AI-generated responses.
+- **Real-time chat** with memory-based AI-generated responses.
 - **Interactive "thought graph"** to visualize the reasoning behind AI responses.
-- **Typing animation** to indicate when the AI is generating a response.
-- **Resizable interface** for chat and graph panels.
+- **Observability analysis**:
+  - Analyze mock observability data triggered by user commands (e.g., "check observability").
+  - AI provides anomaly detection insights, suggested actions, and a thought graph for anomalies.
 
 ---
 
@@ -58,6 +59,7 @@ Make sure you have the following installed:
      ```
      http://localhost:3000
      ```
+
 ---
 
 #### **Backend Setup**
@@ -119,11 +121,31 @@ src/
 ├── index.js                # Entry point
 backend/
 ├── main.py                 # FastAPI backend logic
-├──.env                     # Example environment file
+├── .env                    # Example environment file
 ```
+
+---
+
+## New Functionalities
+
+### Observability Analysis
+- **Mock Observability Data**: The chatbot responds to specific commands (e.g., "check observability") by analyzing mock observability data.
+- **AI Response**:
+  - Describes anomalies detected in the observability data.
+  - Provides suggested actions for resolution (e.g., scaling resources, restarting services, or investigating logs).
+- **Thought Graph for Anomalies**: The AI generates a thought graph specifically for anomaly detection reasoning.
+
+### Typing Animation
+- Displays a "typing" animation while the AI generates its response.
+
+### Copy and Chain-of-Thought Actions
+- Copy any AI response to the clipboard using the **copy** button.
+- Open the chain-of-thought graph for detailed reasoning about the AI's response.
 
 ---
 
 ## Notes for Reviewers
 - **API Key**: The OpenAI API key is not included in the repository. Please follow the setup instructions to add your own key.
+- **Mock Observability Data**: The observability feature uses mock data to simulate real-world scenarios.
 
+---
