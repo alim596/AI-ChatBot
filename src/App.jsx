@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import ChatBox from "./components/ChatBox";
 import ThoughtGraph from "./components/ThoughtGraph";
-import { mockdata } from "./data/mockData";
 import { BiReset } from "react-icons/bi";
 
 const App = () => {
-  const [messages, setMessages] = useState(mockdata);
+  const [messages, setMessages] = useState([]);
   const [currentGraph, setCurrentGraph] = useState(null);
   const [chatWidth, setChatWidth] = useState(100);
   const [conversationTitle, setConversationTitle] = useState("New Conversation");
@@ -159,8 +158,8 @@ const App = () => {
   return (
     <div className="h-screen w-screen flex flex-col bg-[#0f0f0f] text-gray-200 overflow-hidden">
       {/* Header with reset button */}
-      <header className="bg-[#1a1a1a] p-4 border-b border-gray-700 sticky top-0 z-50 flex justify-between items-center">
-        <h1 className="text-xl font-semibold truncate">Chat Application</h1>
+      <header className="bg-[#1a1a1a] p-4 border-none sticky top-0 z-50 flex justify-between items-center">
+        <h1 className="text-xl font-semibold truncate">Chat</h1>
         <button
           onClick={handleResetContext}
           className="p-2 bg-black-600 text-white rounded-full hover:bg-gray-600 transition"

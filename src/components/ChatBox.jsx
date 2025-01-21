@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown"; // For Markdown rendering
 import { AiOutlineSend, AiOutlineCopy } from "react-icons/ai";
-import { FiToggleRight } from "react-icons/fi";
-import TypingAnimation from "./TypingAnimation";
+import { FiToggleRight, FiLoader } from "react-icons/fi"; // Loading spinner icon
+import TypingAnimation from "./TypingAnimation"; // Keeps your typing animation intact
 
 const ChatBox = ({ messages, currentGraph, onShowGraph, onNewMessage, loading }) => {
   const [inputValue, setInputValue] = useState("");
   const textAreaRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
-  // Scroll chat to bottom on new messages
+  // Auto-scroll to the bottom on new messages
   useEffect(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
@@ -16,19 +17,16 @@ const ChatBox = ({ messages, currentGraph, onShowGraph, onNewMessage, loading })
     }
   }, [messages]);
 
-  /**
-   * Auto-resize the textarea
-   */
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
     if (textAreaRef.current) {
       textAreaRef.current.style.height = "auto";
-      textAreaRef.current.style.height = textAreaRef.current.scrollHeight + "px";
+      textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
     }
   };
 
   const handleSend = () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || loading) return;
     onNewMessage(inputValue);
     setInputValue("");
     if (textAreaRef.current) {
@@ -41,72 +39,64 @@ const ChatBox = ({ messages, currentGraph, onShowGraph, onNewMessage, loading })
   };
 
   return (
-    // We'll make this container also "overflow-hidden" & "flex-col"
-    // so we can independently scroll only the message list.
-    <div className="relative flex flex-col h-full overflow-hidden">
-
-      {/* Messages list (independent scroll) */}
+    <div className="relative flex flex-col h-full overflow-hidden bg-[#0f0f0f] text-gray-200">
+      {/* Messages Section */}
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-4"
       >
-        {messages.map(({ id, sender, text, timestamp }) => {
-          const isUser = sender === "user";
-          return (
-            <div
-              key={id}
-              className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`
-                  relative max-w-[75%] p-4 rounded-2xl shadow
-                  whitespace-pre-wrap break-words
-                  ${
-                    isUser
-                      ? "bg-[#2c2c2c] text-gray-200"
-                      : "bg-[#1f1f1f] text-gray-200"
-                  }
-                `}
-              >
-                <p className="text-sm leading-snug">{text}</p>
-                <div className="mt-1 text-xs flex justify-between items-center space-x-2 text-gray-400">
-                  <span>{timestamp}</span>
-                  {!isUser && (
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => onShowGraph(id)}
-                        title="Show Thought Graph"
-                        className={`p-1 rounded-full hover:bg-gray-600 transition ${
-                          currentGraph === id ? "bg-gray-600" : ""
-                        }`}
-                      >
-                        <FiToggleRight size={13} />
-                      </button>
-                      <button
-                        onClick={() => handleCopy(text)}
-                        title="Copy"
-                        className="p-1 rounded-full hover:bg-gray-600 transition"
-                      >
-                        <AiOutlineCopy size={13} />
-                      </button>
-                    </div>
-                  )}
+        {messages.map(({ id, sender, text }) => (
+          <div
+            key={id}
+            className={`flex ${
+              sender === "user" ? "justify-end" : "justify-center"
+            }`}
+          >
+            {sender === "user" ? (
+              <div className="bg-[#2c2c2c] p-4 rounded-2xl text-sm max-w-[75%] shadow">
+                {text}
+              </div>
+            ) : (
+              <div className="bg-transparent max-w-3xl p-4 prose prose-invert mr-6">
+                <ReactMarkdown>{text}</ReactMarkdown>
+                <div className="mt-2 flex justify-between text-gray-400 text-xs">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => onShowGraph(id)}
+                      title="Show Thought Graph"
+                      className={`p-1 rounded-full hover:bg-gray-600 transition ${
+                        currentGraph === id ? "bg-gray-600" : ""
+                      }`}
+                    >
+                      <FiToggleRight size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleCopy(text)}
+                      title="Copy"
+                      className="p-1 rounded-full hover:bg-gray-600 transition"
+                    >
+                      <AiOutlineCopy size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            )}
+          </div>
+        ))}
+
+        {/* Typing Animation */}
         {loading && (
-          <div className="flex w-full justify-start">
-            <div className="relative max-w-[75%] p-4 rounded-2xl shadow bg-[#1f1f1f] text-gray-200">
-              <TypingAnimation /> {/* Show typing animation */}
+          <div className="flex justify-center">
+            <div className="p-4">
+              <TypingAnimation />
             </div>
           </div>
         )}
       </div>
-      {/* Input bar pinned to the bottom inside ChatBox */}
-      <div className="bg-[#0f0f0f] border-t border-gray-700 p-4">
-        <div className="max-w-3xl mx-auto flex space-x-2">
+
+      {/* Input Section */}
+      <div className="bg-[#1a1a1a] border-t border-gray-700 p-4">
+        <div className="flex max-w-3xl mx-auto space-x-2">
           <textarea
             ref={textAreaRef}
             rows={1}
@@ -114,7 +104,7 @@ const ChatBox = ({ messages, currentGraph, onShowGraph, onNewMessage, loading })
                        focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none
                        whitespace-pre-wrap break-words leading-snug
                        scrollbar-thin scrollbar-track-gray-600 scrollbar-thumb-gray-500"
-            placeholder="Type your message..."
+              placeholder="Type your message..."
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={(e) => {
@@ -126,9 +116,14 @@ const ChatBox = ({ messages, currentGraph, onShowGraph, onNewMessage, loading })
           />
           <button
             onClick={handleSend}
-            className="p-3 rounded-full bg-blue-600 hover:bg-blue-500 text-white transition-colors flex-shrink-0"
+            className={`p-3 rounded-full transition ${
+              loading
+                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-500 text-white"
+            }`}
+            disabled={loading} // Disable button while loading
           >
-            <AiOutlineSend size={18} />
+            {loading ? <FiLoader className="animate-spin" size={18} /> : <AiOutlineSend size={18} />}
           </button>
         </div>
       </div>
